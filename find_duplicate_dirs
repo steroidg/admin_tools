@@ -1,0 +1,48 @@
+#!/bin/bash
+##############################################################################
+# Description: Script that detects and list duplicated directories in 2
+#              directories.
+#
+# Author: Dinan Yin (steroidg{REMOVETHIS} AT gmail DOT com)
+##############################################################################
+
+if [ ${#} -ne 2 ]; then
+	echo "ERROR: 2 arguments required.";
+	exit 1;
+fi
+
+DIR1=${1};
+DIR2=${2};
+
+# no point detecting duplicates in the same directory
+if [ "${DIR1}" = "${DIR2}" ]; then
+	echo "ERROR: The 2 arguments are identical.";
+	exit 1;
+fi
+
+[ ! -d ${DIR1} ] && echo "ERROR: ${DIR1} is not a directory." && exit 1;
+[ ! -d ${DIR2} ] && echo "ERROR: ${DIR2} is not a directory." && exit 1;
+
+# handle space in file/dir name
+IFS=$'\n';
+DIR1_DIRS="";
+DUP_DIRS="";
+
+for i in `ls ${DIR1}`; do
+	[ -d ${DIR1}/${i} ] && DIR1_DIRS="${DIR1_DIRS}\n${i}"
+done
+
+for i in `ls ${DIR2}`; do
+	[ -d ${DIR2}/${i} ] &&
+		for j in `echo -e ${DIR1_DIRS}`; do
+			if [ "${i}" = "${j}" ]; then
+				[ -z "${DUP_DIRS}" ] &&\
+					DUP_DIRS="${i}" ||\
+					DUP_DIRS="${DUP_DIRS}\n${i}";
+			fi
+		done
+done
+
+echo -e ${DUP_DIRS};
+exit 0;
+unset IFS;
