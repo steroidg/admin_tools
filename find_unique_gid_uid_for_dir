@@ -1,0 +1,52 @@
+#!/bin/bash
+##############################################################################
+# Description: Script that finds all of the unique UID/GID of a given 
+#              directory and output the result in 2 separate files
+#
+# Author: Dinan Yin (steroidg{REMOVETHIS} AT gmail DOT com)
+##############################################################################
+
+
+PROG_NAME=`basename ${0}`;
+PATH_TO_SEARCH=${1};
+
+if [ -z "${PATH_TO_SEARCH}" ]; then
+	echo "Usage ${PROG_NAME} path_to_search";
+	exit 1;
+fi
+
+if [ ! -d "${PATH_TO_SEARCH}" ]; then
+	echo "ERROR: ${PATH_TO_SEARCH} is not a directory.";
+	exit 1;
+fi
+
+PATH_BASENAME=`basename ${PATH_TO_SEARCH}`;
+OUTPUT_UID_FILE="${PATH_BASENAME}_UUID";
+OUTPUT_GID_FILE="${PATH_BASENAME}_UGID";
+
+if [ -f ${OUTPUT_UID_FILE} -o -f ${OUTPUT_GID_FILE} ]; then
+	echo "ERROR: Output file already exist."
+	exit 1;
+fi
+
+touch ${OUTPUT_UID_FILE} ${OUTPUT_GID_FILE};
+
+IFS=$'\n';
+for i in `find ${PATH_TO_SEARCH}`; do
+	if [ -d ${i} ]; then
+		LS_OUTPUT=`ls -land "${i}"`;
+		DUID=`echo "${LS_OUTPUT}" | awk '{print $3}'`;
+		DGID=`echo "${LS_OUTPUT}" | awk '{print $4}'`;
+
+		if [ -z `cat ${OUTPUT_UID_FILE} | grep ${DUID}` ]; then
+			echo "${DUID}" >> ${OUTPUT_UID_FILE};
+		fi
+
+		if [ -z `cat ${OUTPUT_GID_FILE} | grep ${DGID}` ]; then
+			echo "${DGID}" >> ${OUTPUT_GID_FILE};
+		fi
+	fi
+done
+unset IFS;
+
+exit 0;
