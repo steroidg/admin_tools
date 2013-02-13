@@ -6,11 +6,19 @@
 # Author: Dinan Yin (steroidg{REMOVETHIS} AT gmail DOT com)
 ##############################################################################
 
+print_usage() {
+	echo "Usage: ${PROG_NAME} path_to_search uuid_file ugid_file";
+	echo "";
+	echo "Find all of the unique UID and GID of a given directory.";
+	echo "Output the result into uuid_file and guid_file respectively.";
+	echo "";
+}
+
 
 PROG_NAME=`basename ${0}`;
-
 if [ $# -ne 3 ]; then
-	echo "Usage ${PROG_NAME} path_to_search uuid_file ugid_file";
+	echo "ERROR: Not enough arguments.";
+	print_usage;
 	exit 1;
 fi
 
