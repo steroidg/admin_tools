@@ -8,12 +8,16 @@
 
 
 PROG_NAME=`basename ${0}`;
-PATH_TO_SEARCH=${1};
 
-if [ -z "${PATH_TO_SEARCH}" ]; then
-	echo "Usage ${PROG_NAME} path_to_search";
+if [ $# -ne 3 ]; then
+	echo "Usage ${PROG_NAME} path_to_search uuid_file ugid_file";
 	exit 1;
 fi
+
+PATH_TO_SEARCH=${1};
+UUID_FILE=${2};
+UGID_FILE=${3};
+BACKUP_DIR=${PROG_NAME}_backup;
 
 if [ ! -d "${PATH_TO_SEARCH}" ]; then
 	echo "ERROR: ${PATH_TO_SEARCH} is not a directory.";
@@ -21,32 +25,30 @@ if [ ! -d "${PATH_TO_SEARCH}" ]; then
 fi
 
 PATH_BASENAME=`basename ${PATH_TO_SEARCH}`;
-OUTPUT_UID_FILE="${PATH_BASENAME}_UUID";
-OUTPUT_GID_FILE="${PATH_BASENAME}_UGID";
+OUTPUT_LS_FILE="${PATH_BASENAME}_LS";
 
-if [ -f ${OUTPUT_UID_FILE} -o -f ${OUTPUT_GID_FILE} ]; then
-	echo "ERROR: Output file already exist."
-	exit 1;
+if [ ! -f ${UUID_FILE} -o ! -f ${UGID_FILE} ]; then
+	touch ${UUID_FILE} ${UGID_FILE};
+else
+	[ ! -d ${BACKUP_DIR} ] && mkdir -p ${BACKUP_DIR};
+	cp ${UUID_FILE} ${BACKUP_DIR}/${UUID_FILE}_${PATH_BASENAME};
+	cp ${UGID_FILE} ${BACKUP_DIR}/${UGID_FILE}_${PATH_BASENAME};
 fi
 
-touch ${OUTPUT_UID_FILE} ${OUTPUT_GID_FILE};
+find ${PATH_TO_SEARCH} -type d -name '[!.]*' -exec ls -land {} \; > ${OUTPUT_LS_FILE};
 
-IFS=$'\n';
-for i in `find ${PATH_TO_SEARCH}`; do
-	if [ -d ${i} ]; then
-		LS_OUTPUT=`ls -land "${i}"`;
-		DUID=`echo "${LS_OUTPUT}" | awk '{print $3}'`;
-		DGID=`echo "${LS_OUTPUT}" | awk '{print $4}'`;
-
-		if [ -z `cat ${OUTPUT_UID_FILE} | grep ${DUID}` ]; then
-			echo "${DUID}" >> ${OUTPUT_UID_FILE};
-		fi
-
-		if [ -z `cat ${OUTPUT_GID_FILE} | grep ${DGID}` ]; then
-			echo "${DGID}" >> ${OUTPUT_GID_FILE};
-		fi
+for i in `cat ${OUTPUT_LS_FILE} | awk '{print $3}'`; do
+	if [ -z `cat ${UUID_FILE} | grep ^${i}$` ]; then
+		echo "${i}" >> ${UUID_FILE};
 	fi
 done
-unset IFS;
+
+for i in `cat ${OUTPUT_LS_FILE} | awk '{print $4}'`; do
+	if [ -z `cat ${UGID_FILE} | grep ^${i}$` ]; then
+		echo "${i}" >> ${UGID_FILE};
+	fi
+done
+
+mv ${OUTPUT_LS_FILE} ${BACKUP_DIR};
 
 exit 0;
