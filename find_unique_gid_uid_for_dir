@@ -37,16 +37,24 @@ fi
 
 find ${PATH_TO_SEARCH} -type d -name '[!.]*' -exec ls -land {} \; > ${OUTPUT_LS_FILE};
 
+PREVIOUS_ID="";
 for i in `cat ${OUTPUT_LS_FILE} | awk '{print $3}'`; do
-	if [ -z `cat ${UUID_FILE} | grep ^${i}$` ]; then
-		echo "${i}" >> ${UUID_FILE};
+	if [ "${i}" != "${PREVIOUS_ID}" ]; then
+		if [ -z `cat ${UUID_FILE} | grep ^${i}$` ]; then
+			echo "${i}" >> ${UUID_FILE};
+		fi
 	fi
+	PREVIOUS_ID="${i}";
 done
 
+PREVIOUS_ID="";
 for i in `cat ${OUTPUT_LS_FILE} | awk '{print $4}'`; do
-	if [ -z `cat ${UGID_FILE} | grep ^${i}$` ]; then
-		echo "${i}" >> ${UGID_FILE};
+	if [ "${i}" != "${PREVIOUS_ID}" ]; then
+		if [ -z `cat ${UGID_FILE} | grep ^${i}$` ]; then
+			echo "${i}" >> ${UGID_FILE};
+		fi
 	fi
+	PREVIOUS_ID="${i}";
 done
 
 mv ${OUTPUT_LS_FILE} ${BACKUP_DIR};
