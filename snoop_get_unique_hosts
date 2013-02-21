@@ -1,0 +1,40 @@
+#!/bin/bash
+##############################################################################
+# Description: Script that parses snoop output and generate/append into a list
+#              of unique hosts. This was initially made to generat a list of
+#              NIS clients that are still connecting to a praticular server.
+#
+#              The command I used to generate the snoop output was:
+#                  snoop -o snoop_output_file rpc 100004
+#
+# Author: Dinan Yin (steroidg{REMOVETHIS} AT gmail DOT com)
+##############################################################################
+
+if [ $# -ne 2 ]; then
+	echo "Usage: `basename $0` snoop_output_file host_list_file";
+	exit 1;
+fi
+
+SNOOP_OUTPUT_FILE=$1;
+HOST_LIST_FILE=$2;
+
+if [ ! -f ${SNOOP_OUTPUT_FILE} ]; then
+	echo "ERROR: ${SNOOP_OUTPUT_FILE} doesn't exist.";
+	exit 1;
+fi
+
+[ ! -f ${HOST_LIST_FILE} ] && touch ${HOST_LIST_FILE};
+if [ ! -f ${HOST_LIST_FILE} ]; then
+	echo "ERROR: ${HOST_LIST_FILE} doesn't exist.";
+	exit 1;
+fi
+
+IFS=$'\n';
+for i in `snoop -i ${SNOOP_OUTPUT_FILE} | grep "${HOST} ->"`; do
+	NEW_HOST=`echo ${i} | cut -d ">" -f 2 | cut -d " " -f 2`;
+	RESULT=`cat ${HOST_LIST_FILE} | grep "^${NEW_HOST}$"`;
+	[ -z "${RESULT}" ] && echo ${NEW_HOST} >> ${HOST_LIST_FILE};
+done
+unset IFS;
+
+exit 0;
